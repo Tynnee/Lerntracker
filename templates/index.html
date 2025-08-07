@@ -6,9 +6,47 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
-    <div class="container">
-        <h1>Willkommen beim Lern-Tracker</h1>
-        <p>Hier kannst du deine Lernziele verfolgen!</p>
+    <div class="container mt-5">
+        <h1>Lern-Tracker</h1>
+        <p>Verfolge deine Lernziele und bleibe motiviert!</p>
+        <a href="{{ url_for('add_goal') }}" class="btn btn-primary mb-3">Neues Ziel hinzufügen</a>
+        <h2>Deine Ziele</h2>
+        {% if goals %}
+            <ul class="list-group">
+                {% for goal in goals %}
+                    <li class="list-group-item">
+                        <h5>{{ goal.title }}</h5>
+                        <p>{{ goal.description or "Keine Beschreibung" }}</p>
+                        <p>Fortschritt: {{ goal.progress | round(2) }}%</p>
+                        <a href="{{ url_for('add_task', goal_id=goal.id) }}" class="btn btn-sm btn-secondary">Aufgabe hinzufügen</a>
+                        <h6>Aufgaben:</h6>
+                        {% if goal.tasks %}
+                            <ul>
+                                {% for task in goal.tasks %}
+                                    <li>
+                                        {{ task.title }}
+                                        {% if task.completed %}
+                                            <span class="text-success">✓</span>
+                                        {% else %}
+                                            <span class="text-danger">✗</span>
+                                        {% endif %}
+                                        <form action="{{ url_for('toggle_task', task_id=task.id) }}" method="POST" style="display:inline;">
+                                            <button type="submit" class="btn btn-sm btn-outline-primary">
+                                                {% if task.completed %}Als offen markieren{% else %}Als erledigt markieren{% endif %}
+                                            </button>
+                                        </form>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <p>Keine Aufgaben vorhanden.</p>
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>Keine Ziele vorhanden. Füge dein erstes Ziel hinzu!</p>
+        {% endif %}
     </div>
 </body>
 </html>
