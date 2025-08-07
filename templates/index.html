@@ -4,31 +4,33 @@
     <meta charset="UTF-8">
     <title>Lern-Tracker</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 <body>
-    <div class="container mt-5">
+    <div class="container">
         <h1>Lern-Tracker</h1>
-        <p>Verfolge deine Lernziele und bleibe motiviert!</p>
-        <a href="{{ url_for('add_goal') }}" class="btn btn-primary mb-3">Neues Ziel hinzufügen</a>
+        <p class="text-center text-muted">Verfolge deine Lernziele und sammle Abzeichen!</p>
+        <a href="{{ url_for('add_goal') }}" class="btn btn-primary mb-4">Neues Ziel hinzufügen</a>
         <h2>Deine Ziele</h2>
         {% if goals %}
             <ul class="list-group">
                 {% for goal in goals %}
                     <li class="list-group-item">
                         <h5>{{ goal.title }}</h5>
-                        <p>{{ goal.description or "Keine Beschreibung" }}</p>
-                        <p>Fortschritt: {{ goal.progress | round(2) }}%</p>
+                        <p class="text-muted">{{ goal.description or "Keine Beschreibung" }}</p>
+                        <p><strong>Fortschritt:</strong> {{ goal.progress | round(2) }}%</p>
                         <a href="{{ url_for('add_task', goal_id=goal.id) }}" class="btn btn-sm btn-secondary">Aufgabe hinzufügen</a>
-                        <h6>Aufgaben:</h6>
+                        <h6 class="mt-3">Aufgaben:</h6>
                         {% if goal.tasks %}
                             <ul>
                                 {% for task in goal.tasks %}
                                     <li>
                                         {{ task.title }}
                                         {% if task.completed %}
-                                            <span class="text-success">✓</span>
+                                            <span class="text-success"><i class="fas fa-check-circle"></i></span>
                                         {% else %}
-                                            <span class="text-danger">✗</span>
+                                            <span class="text-danger"><i class="fas fa-times-circle"></i></span>
                                         {% endif %}
                                         <form action="{{ url_for('toggle_task', task_id=task.id) }}" method="POST" style="display:inline;">
                                             <button type="submit" class="btn btn-sm btn-outline-primary">
@@ -39,13 +41,34 @@
                                 {% endfor %}
                             </ul>
                         {% else %}
-                            <p>Keine Aufgaben vorhanden.</p>
+                            <p class="text-muted">Keine Aufgaben vorhanden.</p>
+                        {% endif %}
+                        <h6 class="mt-3">Abzeichen:</h6>
+                        {% if goal.badges %}
+                            <div>
+                                {% for badge in goal.badges %}
+                                    <span class="badge {% if loop.first %}new-badge{% endif %}">
+                                        {% if badge.name == "Anfänger" %}
+                                            <i class="fas fa-star"></i>
+                                        {% elif badge.name == "Meister" %}
+                                            <i class="fas fa-trophy"></i>
+                                        {% elif badge.name == "Marathon" %}
+                                            <i class="fas fa-running"></i>
+                                        {% else %}
+                                            <i class="fas fa-medal"></i>
+                                        {% endif %}
+                                        {{ badge.name }}: {{ badge.description }}
+                                    </span>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <p class="text-muted">Keine Abzeichen erhalten.</p>
                         {% endif %}
                     </li>
                 {% endfor %}
             </ul>
         {% else %}
-            <p>Keine Ziele vorhanden. Füge dein erstes Ziel hinzu!</p>
+            <p class="text-muted">Keine Ziele vorhanden. Füge dein erstes Ziel hinzu!</p>
         {% endif %}
     </div>
 </body>

@@ -4,10 +4,12 @@
     <meta charset="UTF-8">
     <title>Ziel hinzufügen</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 <body>
-    <div class="container mt-5">
-        <h2>Neues Lernziel</h2>
+    <div class="container">
+        <h2><i class="fas fa-bullseye me-2"></i>Neues Lernziel</h2>
         <form method="POST" action="{{ url_for('add_goal') }}">
             <div class="mb-3">
                 <label for="title" class="form-label">Titel</label>
@@ -17,8 +19,8 @@
                 <label for="description" class="form-label">Beschreibung (optional)</label>
                 <textarea class="form-control" id="description" name="description" rows="4"></textarea>
             </div>
-            <button type="submit" class="btn btn-primary">Ziel speichern</button>
-            <a href="{{ url_for('index') }}" class="btn btn-secondary">Zurück</a>
+            <button type="submit" class="btn btn-primary"><i class="fas fa-save me-2"></i>Ziel speichern</button>
+            <a href="{{ url_for('index') }}" class="btn btn-secondary"><i class="fas fa-arrow-left me-2"></i>Zurück</a>
         </form>
     </div>
 </body>

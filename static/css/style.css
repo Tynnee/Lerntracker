@@ -1,0 +1,77 @@
+/* Allgemeines Layout */
+body {
+    background-color: #f8f9fa;
+    font-family: 'Arial', sans-serif;
+}
+
+.container {
+    max-width: 800px;
+    margin-top: 2rem;
+    padding: 2rem;
+    background: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+    color: #343a40;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.btn-primary {
+    background-color: #007bff;
+    border: none;
+    transition: background-color 0.3s;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+}
+
+/* Abzeichen-Styling */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    margin: 5px;
+    padding: 8px 12px;
+    font-size: 14px;
+    font-weight: bold;
+    border-radius: 20px;
+    background-color: #28a745;
+    color: white;
+    transition: transform 0.2s;
+}
+
+.badge:hover {
+    transform: scale(1.05);
+}
+
+.badge i {
+    margin-right: 8px;
+}
+
+/* Listenelemente */
+.list-group-item {
+    border-radius: 8px;
+    margin-bottom: 10px;
+    padding: 1.5rem;
+    background-color: #f1f3f5;
+}
+
+/* Buttons in Listen */
+.btn-sm {
+    margin-left: 10px;
+}
+
+/* Animation für neue Abzeichen */
+@keyframes badgePulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+.new-badge {
+    animation: badgePulse 1s ease-in-out;
+}
