@@ -12,7 +12,9 @@
                     <h5>{{ goal.title }}</h5>
                     <p class="text-muted">{{ goal.description or "Keine Beschreibung" }}</p>
                     <p><strong>Fortschritt:</strong> {{ goal.progress | round(2) }}%</p>
-                    <a href="{{ url_for('add_task', goal_id=goal.id) }}" class="btn btn-sm btn-secondary">Aufgabe hinzufügen</a>
+                    <!-- Fortschrittsdiagramm -->
+                    <canvas class="progress-chart" data-goal-id="{{ goal.id }}" data-progress="{{ goal.progress | round(2) }}" width="400" height="50"></canvas>
+                    <a href="{{ url_for('add_task', goal_id=goal.id) }}" class="btn btn-sm btn-secondary mt-2">Aufgabe hinzufügen</a>
                     <h6 class="mt-3">Aufgaben:</h6>
                     {% if goal.tasks %}
                         <ul>
@@ -58,10 +60,30 @@
                     {% else %}
                         <p class="text-muted">Keine Abzeichen erhalten.</p>
                     {% endif %}
+                    <h6 class="mt-3">Lernressourcen:</h6>
+                    {% if goal.videos %}
+                        <div class="row">
+                            {% for video in goal.videos %}
+                                <div class="col-md-4 mb-3">
+                                    <div class="card">
+                                        <img src="{{ video.thumbnail }}" class="card-img-top" alt="{{ video.title }}">
+                                        <div class="card-body">
+                                            <h6 class="card-title">{{ video.title }}</h6>
+                                            <a href="{{ video.url }}" target="_blank" class="btn btn-sm btn-primary">Video ansehen</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted">Keine Lernressourcen gefunden.</p>
+                    {% endif %}
                 </li>
             {% endfor %}
         </ul>
     {% else %}
         <p class="text-muted">Keine Ziele vorhanden. Füge dein erstes Ziel hinzu!</p>
     {% endif %}
+    <!-- Lade charts.js -->
+    <script src="{{ url_for('static', filename='js/charts.js') }}"></script>
 {% endblock %}

@@ -3,14 +3,32 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from datetime import datetime
 from collections import defaultdict
+from googleapiclient.discovery import build
+from dotenv import load_dotenv
+import os
+
+# Lade Umgebungsvariablen
+try:
+    load_dotenv()
+except Exception as e:
+    print(f"Warnung: Fehler beim Laden der .env-Datei: {str(e)}")
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///learn_tracker.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SECRET_KEY'] = 'your-secret-key'  # Für Flash-Nachrichten benötigt
+app.config['SECRET_KEY'] = 'your-secret-key'
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
+
+# YouTube API initialisieren, wenn Schlüssel vorhanden
+YOUTUBE_API_KEY = os.getenv('YOUTUBE_API_KEY')
+youtube = None
+if YOUTUBE_API_KEY:
+    try:
+        youtube = build('youtube', 'v3', developerKey=YOUTUBE_API_KEY)
+    except Exception as e:
+        flash(f"Fehler bei der YouTube API-Initialisierung: {str(e)}", "danger")
 
 class Goal(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -112,9 +130,39 @@ def check_badges(goal):
 
     db.session.commit()
 
+def get_youtube_videos(query, max_results=3):
+    """Sucht YouTube-Videos basierend auf dem Ziel-Titel."""
+    if not youtube:
+        return []
+    try:
+        request = youtube.search().list(
+            part="snippet",
+            q=query + " lernen tutorial",
+            maxResults=max_results,
+            type="video"
+        )
+        response = request.execute()
+        videos = []
+        for item in response['items']:
+            video = {
+                'title': item['snippet']['title'],
+                'video_id': item['id']['videoId'],
+                'thumbnail': item['snippet']['thumbnails']['default']['url'],
+                'url': f"https://www.youtube.com/watch?v={item['id']['videoId']}"
+            }
+            videos.append(video)
+        return videos
+    except Exception as e:
+        flash(f"Fehler bei der YouTube-Suche: {str(e)}", "danger")
+        return []
+
 @app.route('/')
 def index():
     goals = Goal.query.all()
+    if not youtube:
+        flash("YouTube-Videos sind deaktiviert, da kein API-Schlüssel konfiguriert ist. Bitte füge einen YOUTUBE_API_KEY in die .env-Datei ein.", "warning")
+    for goal in goals:
+        goal.videos = get_youtube_videos(goal.title)
     return render_template('index.html', goals=goals)
 
 @app.route('/add_goal', methods=['GET', 'POST'])
@@ -125,6 +173,7 @@ def add_goal():
         new_goal = Goal(title=title, description=description)
         db.session.add(new_goal)
         db.session.commit()
+        flash(f"Ziel '{title}' erfolgreich erstellt!", "success")
         return redirect(url_for('index'))
     return render_template('goal_form.html')
 
@@ -137,6 +186,7 @@ def add_task(goal_id):
         db.session.add(new_task)
         db.session.commit()
         check_badges(goal)
+        flash(f"Aufgabe '{title}' erfolgreich hinzugefügt!", "success")
         return redirect(url_for('index'))
     return render_template('task_form.html', goal=goal)
 

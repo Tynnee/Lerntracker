@@ -32,12 +32,13 @@ h1 {
 
 /* Navbar */
 .navbar {
+    background-color: #ffffff;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .navbar-brand {
     font-weight: bold;
-    color: #343a40 !important;
+    color: #007bff !important;
 }
 
 .nav-link {
@@ -99,4 +100,27 @@ h1 {
 .alert {
     margin-bottom: 1rem;
     border-radius: 8px;
+}
+
+/* YouTube-Video-Cards */
+.card {
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.card-img-top {
+    object-fit: cover;
+    height: 120px;
+}
+
+.card-title {
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+/* Chart.js Diagramme */
+canvas.progress-chart {
+    max-height: 50px;
+    max-width: 100%;
+    margin-bottom: 1rem;
 }
