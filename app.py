@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from datetime import datetime
@@ -7,6 +7,7 @@ from collections import defaultdict
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///learn_tracker.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SECRET_KEY'] = 'your-secret-key'  # Für Flash-Nachrichten benötigt
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
@@ -16,7 +17,7 @@ class Goal(db.Model):
     title = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text, nullable=True)
     progress = db.Column(db.Float, default=0.0)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)  # Neues Feld
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
     tasks = db.relationship('Task', backref='goal', lazy=True)
     badges = db.relationship('Badge', backref='goal', lazy=True)
 
@@ -34,7 +35,7 @@ class Badge(db.Model):
     goal_id = db.Column(db.Integer, db.ForeignKey('goal.id'), nullable=False)
 
 def check_badges(goal):
-    """Prüft und vergibt Abzeichen basierend auf Fortschritt und Aufgaben."""
+    """Prüft und vergibt oder entfernt Abzeichen basierend auf Fortschritt und Aufgaben."""
     tasks = goal.tasks
     total_tasks = len(tasks)
     completed_tasks = sum(1 for task in tasks if task.completed)
@@ -45,6 +46,12 @@ def check_badges(goal):
         if not existing_badge:
             new_badge = Badge(name="Anfänger", description="5 Aufgaben erledigt!", goal_id=goal.id)
             db.session.add(new_badge)
+            flash(f"Glückwunsch! Du hast das 'Anfänger'-Abzeichen für '{goal.title}' erhalten!", "success")
+    else:
+        existing_badge = Badge.query.filter_by(goal_id=goal.id, name="Anfänger").first()
+        if existing_badge:
+            db.session.delete(existing_badge)
+            flash(f"'Anfänger'-Abzeichen für '{goal.title}' entfernt.", "info")
 
     # Abzeichen: Meister (100% Fortschritt)
     if goal.progress >= 100:
@@ -52,9 +59,16 @@ def check_badges(goal):
         if not existing_badge:
             new_badge = Badge(name="Meister", description="Ziel zu 100% abgeschlossen!", goal_id=goal.id)
             db.session.add(new_badge)
+            flash(f"Glückwunsch! Du hast das 'Meister'-Abzeichen für '{goal.title}' erhalten!", "success")
+    else:
+        existing_badge = Badge.query.filter_by(goal_id=goal.id, name="Meister").first()
+        if existing_badge:
+            db.session.delete(existing_badge)
+            flash(f"'Meister'-Abzeichen für '{goal.title}' entfernt.", "info")
 
     # Abzeichen: Marathon (3 aufeinanderfolgende Tage mit erledigten Aufgaben)
     completed_dates = [task.completed_at.date() for task in tasks if task.completed and task.completed_at]
+    marathon_qualified = False
     if completed_dates:
         unique_dates = sorted(set(completed_dates))
         consecutive_days = 1
@@ -64,22 +78,37 @@ def check_badges(goal):
             else:
                 consecutive_days = 1
             if consecutive_days >= 3:
+                marathon_qualified = True
                 existing_badge = Badge.query.filter_by(goal_id=goal.id, name="Marathon").first()
                 if not existing_badge:
                     new_badge = Badge(name="Marathon", description="Aufgaben an 3 aufeinanderfolgenden Tagen erledigt!", goal_id=goal.id)
                     db.session.add(new_badge)
+                    flash(f"Glückwunsch! Du hast das 'Marathon'-Abzeichen für '{goal.title}' erhalten!", "success")
                 break
+    if not marathon_qualified:
+        existing_badge = Badge.query.filter_by(goal_id=goal.id, name="Marathon").first()
+        if existing_badge:
+            db.session.delete(existing_badge)
+            flash(f"'Marathon'-Abzeichen für '{goal.title}' entfernt.", "info")
 
     # Abzeichen: Schnellstarter (Aufgabe innerhalb von 24 Stunden nach Zielerstellung erledigt)
+    schnellstarter_qualified = False
     for task in tasks:
         if task.completed and task.completed_at and goal.created_at:
             time_diff = task.completed_at - goal.created_at
-            if time_diff.total_seconds() <= 24 * 3600:  # 24 Stunden in Sekunden
+            if time_diff.total_seconds() <= 24 * 3600:
+                schnellstarter_qualified = True
                 existing_badge = Badge.query.filter_by(goal_id=goal.id, name="Schnellstarter").first()
                 if not existing_badge:
                     new_badge = Badge(name="Schnellstarter", description="Aufgabe innerhalb von 24 Stunden erledigt!", goal_id=goal.id)
                     db.session.add(new_badge)
+                    flash(f"Glückwunsch! Du hast das 'Schnellstarter'-Abzeichen für '{goal.title}' erhalten!", "success")
                 break
+    if not schnellstarter_qualified:
+        existing_badge = Badge.query.filter_by(goal_id=goal.id, name="Schnellstarter").first()
+        if existing_badge:
+            db.session.delete(existing_badge)
+            flash(f"'Schnellstarter'-Abzeichen für '{goal.title}' entfernt.", "info")
 
     db.session.commit()
 

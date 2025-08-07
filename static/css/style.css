@@ -94,3 +94,9 @@ h1 {
 .new-badge {
     animation: badgePulse 1s ease-in-out;
 }
+
+/* Flash-Nachrichten */
+.alert {
+    margin-bottom: 1rem;
+    border-radius: 8px;
+}
