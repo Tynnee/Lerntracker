@@ -8,16 +8,15 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///learn_tracker.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# Erstelle db-Instanz
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
-# Modelle direkt in app.py definieren
 class Goal(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text, nullable=True)
     progress = db.Column(db.Float, default=0.0)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)  # Neues Feld
     tasks = db.relationship('Task', backref='goal', lazy=True)
     badges = db.relationship('Badge', backref='goal', lazy=True)
 
@@ -71,6 +70,17 @@ def check_badges(goal):
                     db.session.add(new_badge)
                 break
 
+    # Abzeichen: Schnellstarter (Aufgabe innerhalb von 24 Stunden nach Zielerstellung erledigt)
+    for task in tasks:
+        if task.completed and task.completed_at and goal.created_at:
+            time_diff = task.completed_at - goal.created_at
+            if time_diff.total_seconds() <= 24 * 3600:  # 24 Stunden in Sekunden
+                existing_badge = Badge.query.filter_by(goal_id=goal.id, name="Schnellstarter").first()
+                if not existing_badge:
+                    new_badge = Badge(name="Schnellstarter", description="Aufgabe innerhalb von 24 Stunden erledigt!", goal_id=goal.id)
+                    db.session.add(new_badge)
+                break
+
     db.session.commit()
 
 @app.route('/')
@@ -120,5 +130,5 @@ def toggle_task(task_id):
 
 if __name__ == '__main__':
     with app.app_context():
-        db.create_all()  # Für die Initialisierung, wird bei Migrationen ignoriert
+        db.create_all()
     app.run(debug=True, port=5005)
